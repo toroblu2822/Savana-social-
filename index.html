@@ -113,5 +113,167 @@
     </div>
   </div>
 </div>
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjBjhgwUd0P4EV7ZhsqCRHPFJQoASUKvc",
+    authDomain: "savana-social.firebaseapp.com",
+    projectId: "savana-social",
+    storageBucket: "savana-social.appspot.com",
+    messagingSenderId: "1009203185830",
+    appId: "1:1009203185830:web:14ca2c419caab2dfc40c67"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const { createApp } = Vue;
+  createApp({
+    data() {
+      return {
+        username: '', species: '', bio: '', avatar: '',
+        newPost: '', postImage: '', loggedIn: false,
+        loading: true, posts: [], users: [], searchQuery: '',
+        following: [], profileView: null, isModerator: false
+      };
+    },
+    computed: {
+      filteredUsers() {
+        return this.users.filter(u =>
+          u.username.toLowerCase().includes(this.searchQuery.toLowerCase()) &&
+          u.username !== this.username
+        );
+      }
+    },
+    methods: {
+      login() {
+        if (!this.username || !this.species || !this.bio || !this.avatar) {
+          alert("Compila tutti i campi!");
+          return;
+        }
+        this.loggedIn = true;
+        this.isModerator = (this.username.toLowerCase() === "juan");
+        localStorage.setItem("savanaUser", JSON.stringify({
+          username: this.username,
+          species: this.species,
+          bio: this.bio,
+          avatar: this.avatar
+        }));
+        db.collection("profiles").doc(this.username).set({
+          username: this.username,
+          species: this.species,
+          bio: this.bio,
+          avatar: this.avatar,
+        }, { merge: true });
+      },
+      logout() {
+        localStorage.removeItem("savanaUser");
+        this.loggedIn = false;
+        this.username = ''; this.species = ''; this.bio = ''; this.avatar = '';
+        this.posts = [];
+      },
+      handleAvatar(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = e => this.avatar = e.target.result;
+          reader.readAsDataURL(file);
+        }
+      },
+      handlePostImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = e => this.postImage = e.target.result;
+          reader.readAsDataURL(file);
+        }
+      },
+      submitPost() {
+        if (!this.newPost && !this.postImage) return;
+        const post = {
+          author: this.username,
+          species: this.species,
+          bio: this.bio,
+          avatar: this.avatar,
+          content: this.newPost,
+          image: this.postImage || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          likes: [],
+          comments: []
+        };
+        db.collection("posts").add(post);
+        this.newPost = '';
+        this.postImage = '';
+      },
+      toggleLike(post) {
+        const index = post.likes.indexOf(this.username);
+        if (index === -1) post.likes.push(this.username);
+        else post.likes.splice(index, 1);
+        db.collection("posts").doc(post.id).update({ likes: post.likes });
+      },
+      userLiked(post) {
+        return post.likes.includes(this.username);
+      },
+      addComment(post) {
+        if (!post.newComment || !post.newComment.trim()) return;
+        post.comments.push({ author: this.username, text: post.newComment });
+        db.collection("posts").doc(post.id).update({ comments: post.comments });
+        post.newComment = '';
+      },
+      deletePost(postId) {
+        if (confirm("Eliminare questo post?")) {
+          db.collection("posts").doc(postId).delete();
+        }
+      },
+      toggleFollow(target) {
+        const index = this.following.indexOf(target);
+        if (index === -1) this.following.push(target);
+        else this.following.splice(index, 1);
+        db.collection("profiles").doc(this.username).set({
+          following: this.following
+        }, { merge: true });
+      },
+      viewProfile(p) {
+        this.profileView = p;
+      },
+      loadPosts() {
+        db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+          this.posts = snapshot.docs.map(doc => {
+            const post = doc.data();
+            post.id = doc.id;
+            post.newComment = '';
+            post.showComments = false;
+            post.likes = post.likes || [];
+            post.comments = post.comments || [];
+            return post;
+          });
+        });
+      },
+      loadProfiles() {
+        db.collection("profiles").onSnapshot(snapshot => {
+          this.users = snapshot.docs.map(doc => doc.data());
+          const current = this.users.find(u => u.username === this.username);
+          if (current && current.following) {
+            this.following = current.following;
+          }
+        });
+      }
+    },
+    mounted() {
+      const saved = localStorage.getItem("savanaUser");
+      if (saved) {
+        const user = JSON.parse(saved);
+        this.username = user.username;
+        this.species = user.species;
+        this.bio = user.bio;
+        this.avatar = user.avatar;
+        this.loggedIn = true;
+        this.isModerator = (this.username.toLowerCase() === "juan");
+      }
+      this.loadPosts();
+      this.loadProfiles();
+      this.loading = false;
+    }
+  }).mount('#app');
+</script>
+
 </body>
 </html>
