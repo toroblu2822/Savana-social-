@@ -153,7 +153,7 @@ createApp({
       );
     }
   },
- methods: {
+methods: {
   login() {
     if (!this.username || !this.species || !this.bio || !this.avatar) {
       alert("Compila tutti i campi!");
@@ -260,7 +260,9 @@ createApp({
     if (myProfile) {
       this.profileView = myProfile;
     }
-  },
+  }
+}, // ✅ chiusura corretta dei methods
+
 
 
 
