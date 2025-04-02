@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Savana Social - Completo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Savana Social</title>
   <script src="https://unpkg.com/vue@3.4.15/dist/vue.global.prod.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
       background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('savana.webp') no-repeat center center fixed;
@@ -37,12 +36,11 @@
 
   <div v-else>
     <div class="flex justify-between items-center text-white">
-      <div class="text-right">
-  <button @click="viewOwnProfile" class="text-sm text-white underline">👤 Il mio profilo</button>
-</div>
-
       <h1 class="text-xl font-bold">🌿 Savana Social</h1>
-      <button @click="logout" class="text-red-300 text-sm">Esci</button>
+      <div class="flex gap-4 items-center">
+        <button @click="viewOwnProfile" class="text-sm text-white underline">👤 Il mio profilo</button>
+        <button @click="logout" class="text-red-300 text-sm">Esci</button>
+      </div>
     </div>
 
     <div class="bg-white p-4 rounded-xl flex items-center space-x-4">
@@ -52,29 +50,28 @@
         <p class="text-xs italic">{{ bio }}</p>
       </div>
     </div>
-    
-<div class="bg-white p-4 rounded-xl">
-  <button @click="showUserSearch = !showUserSearch" class="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">
-    🔍 Cerca utenti
-  </button>
-  <div v-if="showUserSearch" class="mt-4 space-y-2">
-    <input v-model="searchQuery" placeholder="🔎 Nome..." class="w-full p-2 border rounded">
-    
-    <div v-if="filteredUsers.length === 0" class="text-sm text-gray-500 text-center mt-2">Nessun utente trovato</div>
-    
-    <div v-for="p in filteredUsers" :key="p.username" class="flex items-center justify-between border-t pt-2 mt-2">
-      <div class="flex items-center space-x-3 cursor-pointer" @click="viewProfile(p)">
-        <img :src="p.avatar" class="w-8 h-8 rounded-full object-cover">
-        <span class="text-sm font-semibold">{{ p.username }} ({{ p.species }})</span>
-      </div>
-      <button v-if="p.username !== username" @click="toggleFollow(p.username)" class="text-xs text-blue-500 hover:underline">
-        {{ following.includes(p.username) ? 'Smetti di seguire' : 'Segui' }}
+
+    <!-- Cerca utenti -->
+    <div class="bg-white p-4 rounded-xl">
+      <button @click="showUserSearch = !showUserSearch" class="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">
+        🔍 Cerca utenti
       </button>
+      <div v-if="showUserSearch" class="mt-4 space-y-2">
+        <input v-model="searchQuery" placeholder="🔎 Nome..." class="w-full p-2 border rounded">
+        <div v-if="filteredUsers.length === 0" class="text-sm text-gray-500 text-center mt-2">Nessun utente trovato</div>
+        <div v-for="p in filteredUsers" :key="p.username" class="flex items-center justify-between border-t pt-2 mt-2">
+          <div class="flex items-center space-x-3 cursor-pointer" @click="viewProfile(p)">
+            <img :src="p.avatar" class="w-8 h-8 rounded-full object-cover">
+            <span class="text-sm font-semibold">{{ p.username }} ({{ p.species }})</span>
+          </div>
+          <button v-if="p.username !== username" @click="toggleFollow(p.username)" class="text-xs text-blue-500 hover:underline">
+            {{ following.includes(p.username) ? 'Smetti di seguire' : 'Segui' }}
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-
+    <!-- Profilo utente -->
     <div v-if="profileView" class="bg-white p-4 rounded-xl">
       <div class="flex justify-between">
         <h2 class="font-bold text-lg">{{ profileView.username }} ({{ profileView.species }})</h2>
@@ -90,12 +87,14 @@
       </div>
     </div>
 
+    <!-- Nuovo post -->
     <div class="bg-white p-4 rounded-xl space-y-2">
       <textarea v-model="newPost" placeholder="Scrivi qualcosa..." class="w-full p-2 border rounded"></textarea>
       <input type="file" @change="handlePostImage" class="w-full p-2 border rounded">
       <button @click="submitPost" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Pubblica</button>
     </div>
 
+    <!-- Post list -->
     <div v-for="post in posts" :key="post.id" class="bg-white p-4 rounded-xl shadow mt-4 space-y-2">
       <div class="flex space-x-2 items-center">
         <img v-if="post.avatar" :src="post.avatar" class="w-10 h-10 rounded-full object-cover">
@@ -153,120 +152,115 @@ createApp({
       );
     }
   },
-methods: {
-  login() {
-    if (!this.username || !this.species || !this.bio || !this.avatar) {
-      alert("Compila tutti i campi!");
-      return;
-    }
-    this.loggedIn = true;
-    this.isModerator = (this.username.toLowerCase() === "juan");
-    localStorage.setItem("savanaUser", JSON.stringify({
-      username: this.username,
-      species: this.species,
-      bio: this.bio,
-      avatar: this.avatar
-    }));
-    db.collection("profiles").doc(this.username).set({
-      username: this.username,
-      species: this.species,
-      bio: this.bio,
-      avatar: this.avatar
-    }, { merge: true });
-  },
-
-  logout() {
-    localStorage.removeItem("savanaUser");
-    this.loggedIn = false;
-    this.username = ''; this.species = ''; this.bio = ''; this.avatar = '';
-    this.posts = [];
-  },
-
-  handleAvatar(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => this.avatar = e.target.result;
-      reader.readAsDataURL(file);
-    }
-  },
-
-  handlePostImage(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => this.postImage = e.target.result;
-      reader.readAsDataURL(file);
-    }
-  },
-
-  submitPost() {
-    if (!this.newPost && !this.postImage) return;
-    const post = {
-      author: this.username,
-      species: this.species,
-      bio: this.bio,
-      avatar: this.avatar,
-      content: this.newPost,
-      image: this.postImage || '',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      likes: [],
-      comments: []
-    };
-    db.collection("posts").add(post);
-    this.newPost = '';
-    this.postImage = '';
-  },
-
-  toggleLike(post) {
-    const index = post.likes.indexOf(this.username);
-    if (index === -1) post.likes.push(this.username);
-    else post.likes.splice(index, 1);
-    db.collection("posts").doc(post.id).update({ likes: post.likes });
-  },
-
-  userLiked(post) {
-    return post.likes.includes(this.username);
-  },
-
-  addComment(post) {
-    if (!post.newComment || !post.newComment.trim()) return;
-    post.comments.push({ author: this.username, text: post.newComment });
-    db.collection("posts").doc(post.id).update({ comments: post.comments });
-    post.newComment = '';
-  },
-
-  deletePost(postId) {
-    if (confirm("Eliminare questo post?")) {
-      db.collection("posts").doc(postId).delete();
-    }
-  },
-
-  toggleFollow(target) {
-    const index = this.following.indexOf(target);
-    if (index === -1) this.following.push(target);
-    else this.following.splice(index, 1);
-    db.collection("profiles").doc(this.username).set({
-      following: this.following
-    }, { merge: true });
-  },
-
-  viewProfile(p) {
-    this.profileView = p;
-  },
-
-  viewOwnProfile() {
-    const myProfile = this.users.find(u => u.username === this.username);
-    if (myProfile) {
-      this.profileView = myProfile;
-    }
-  }
-}, // ✅ chiusura corretta dei methods
-
-
-
-
+  methods: {
+    login() {
+      if (!this.username || !this.species || !this.bio || !this.avatar) {
+        alert("Compila tutti i campi!");
+        return;
+      }
+      this.loggedIn = true;
+      this.isModerator = (this.username.toLowerCase() === "juan");
+      localStorage.setItem("savanaUser", JSON.stringify({
+        username: this.username,
+        species: this.species,
+        bio: this.bio,
+        avatar: this.avatar
+      }));
+      db.collection("profiles").doc(this.username).set({
+        username: this.username,
+        species: this.species,
+        bio: this.bio,
+        avatar: this.avatar
+      }, { merge: true });
     },
+
+    logout() {
+      localStorage.removeItem("savanaUser");
+      this.loggedIn = false;
+      this.username = ''; this.species = ''; this.bio = ''; this.avatar = '';
+      this.posts = [];
+    },
+
+    handleAvatar(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => this.avatar = e.target.result;
+        reader.readAsDataURL(file);
+      }
+    },
+
+    handlePostImage(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => this.postImage = e.target.result;
+        reader.readAsDataURL(file);
+      }
+    },
+
+    submitPost() {
+      if (!this.newPost && !this.postImage) return;
+      const post = {
+        author: this.username,
+        species: this.species,
+        bio: this.bio,
+        avatar: this.avatar,
+        content: this.newPost,
+        image: this.postImage || '',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        likes: [],
+        comments: []
+      };
+      db.collection("posts").add(post);
+      this.newPost = '';
+      this.postImage = '';
+    },
+
+    toggleLike(post) {
+      const index = post.likes.indexOf(this.username);
+      if (index === -1) post.likes.push(this.username);
+      else post.likes.splice(index, 1);
+      db.collection("posts").doc(post.id).update({ likes: post.likes });
+    },
+
+    userLiked(post) {
+      return post.likes.includes(this.username);
+    },
+
+    addComment(post) {
+      if (!post.newComment || !post.newComment.trim()) return;
+      post.comments.push({ author: this.username, text: post.newComment });
+      db.collection("posts").doc(post.id).update({ comments: post.comments });
+      post.newComment = '';
+    },
+
+    deletePost(postId) {
+      if (confirm("Eliminare questo post?")) {
+        db.collection("posts").doc(postId).delete();
+      }
+    },
+
+    toggleFollow(target) {
+      const index = this.following.indexOf(target);
+      if (index === -1) this.following.push(target);
+      else this.following.splice(index, 1);
+      db.collection("profiles").doc(this.username).set({
+        following: this.following
+      }, { merge: true });
+    },
+
+    viewProfile(p) {
+      this.profileView = p;
+    },
+
+    viewOwnProfile() {
+      const myProfile = this.users.find(u => u.username === this.username);
+      if (myProfile) {
+        this.profileView = myProfile;
+      }
+    },
+
     loadPosts() {
       db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snapshot => {
         this.posts = snapshot.docs.map(doc => {
@@ -280,6 +274,7 @@ methods: {
         });
       });
     },
+
     loadProfiles() {
       db.collection("profiles").onSnapshot(snapshot => {
         this.users = snapshot.docs.map(doc => doc.data());
@@ -290,6 +285,7 @@ methods: {
       });
     }
   },
+
   mounted() {
     const saved = localStorage.getItem("savanaUser");
     if (saved) {
@@ -309,4 +305,5 @@ methods: {
 </script>
 </body>
 </html>
+
 
