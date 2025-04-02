@@ -3,7 +3,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Savana Social - Completo</title>
   <script src="https://unpkg.com/vue@3.4.15/dist/vue.global.prod.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -41,7 +41,15 @@
       <button @click="logout" class="text-red-300 text-sm">Esci</button>
     </div>
 
-    <div class="bg-white p-4 rounded-xl space-y-2">
+    <div class="bg-white p-4 rounded-xl flex items-center space-x-4">
+      <img v-if="avatar" :src="avatar" class="w-12 h-12 rounded-full object-cover">
+      <div>
+        <h2 class="font-bold">{{ username }} ({{ species }})</h2>
+        <p class="text-xs italic">{{ bio }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl">
       <button @click="showUserSearch = !showUserSearch" class="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">
         🔍 Cerca utenti
       </button>
@@ -59,12 +67,6 @@
       </div>
     </div>
 
-    <div class="bg-white p-4 rounded-xl space-y-2">
-      <textarea v-model="newPost" placeholder="Scrivi qualcosa..." class="w-full p-2 border rounded"></textarea>
-      <input type="file" @change="handlePostImage" class="w-full p-2 border rounded">
-      <button @click="submitPost" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Pubblica</button>
-    </div>
-
     <div v-if="profileView" class="bg-white p-4 rounded-xl">
       <div class="flex justify-between">
         <h2 class="font-bold text-lg">{{ profileView.username }} ({{ profileView.species }})</h2>
@@ -73,14 +75,17 @@
       <img :src="profileView.avatar" class="w-20 h-20 rounded-full object-cover my-2">
       <p class="italic text-sm">{{ profileView.bio }}</p>
       <p class="text-xs mt-2">👥 Follower: {{ profileView.followers?.length || 0 }} | Seguiti: {{ profileView.following?.length || 0 }}</p>
-      <ul class="text-xs text-gray-500 mt-1" v-if="profileView.followers && profileView.followers.length">
-        <li v-for="f in profileView.followers">👁 {{ f }}</li>
-      </ul>
       <hr class="my-2">
       <div v-for="post in posts.filter(p => p.author === profileView.username)" class="border-t pt-2 mt-2">
         <p class="text-sm">{{ post.content }}</p>
         <img v-if="post.image" :src="post.image" class="w-full max-h-48 object-contain rounded mt-2">
       </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl space-y-2">
+      <textarea v-model="newPost" placeholder="Scrivi qualcosa..." class="w-full p-2 border rounded"></textarea>
+      <input type="file" @change="handlePostImage" class="w-full p-2 border rounded">
+      <button @click="submitPost" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Pubblica</button>
     </div>
 
     <div v-for="post in posts" :key="post.id" class="bg-white p-4 rounded-xl shadow mt-4 space-y-2">
@@ -110,7 +115,6 @@
     </div>
   </div>
 </div>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAjBjhgwUd0P4EV7ZhsqCRHPFJQoASUKvc",
@@ -159,7 +163,7 @@ createApp({
         username: this.username,
         species: this.species,
         bio: this.bio,
-        avatar: this.avatar,
+        avatar: this.avatar
       }, { merge: true });
     },
     logout() {
@@ -186,7 +190,7 @@ createApp({
     },
     submitPost() {
       if (!this.newPost && !this.postImage) return;
-      db.collection("posts").add({
+      const post = {
         author: this.username,
         species: this.species,
         bio: this.bio,
@@ -196,14 +200,15 @@ createApp({
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         likes: [],
         comments: []
-      });
+      };
+      db.collection("posts").add(post);
       this.newPost = '';
       this.postImage = '';
     },
     toggleLike(post) {
-      const i = post.likes.indexOf(this.username);
-      if (i === -1) post.likes.push(this.username);
-      else post.likes.splice(i, 1);
+      const index = post.likes.indexOf(this.username);
+      if (index === -1) post.likes.push(this.username);
+      else post.likes.splice(index, 1);
       db.collection("posts").doc(post.id).update({ likes: post.likes });
     },
     userLiked(post) {
@@ -224,7 +229,9 @@ createApp({
       const index = this.following.indexOf(target);
       if (index === -1) this.following.push(target);
       else this.following.splice(index, 1);
-      db.collection("profiles").doc(this.username).set({ following: this.following }, { merge: true });
+      db.collection("profiles").doc(this.username).set({
+        following: this.following
+      }, { merge: true });
     },
     viewProfile(p) {
       this.profileView = p;
@@ -240,7 +247,6 @@ createApp({
           post.comments = post.comments || [];
           return post;
         });
-        this.loading = false; // ✅ solo dopo il caricamento
       });
     },
     loadProfiles() {
@@ -264,10 +270,12 @@ createApp({
       this.loggedIn = true;
       this.isModerator = (this.username.toLowerCase() === "juan");
     }
-    this.loadPosts(); // 👈 ora controlla qui
+    this.loadPosts();
     this.loadProfiles();
+    this.loading = false;
   }
 }).mount('#app');
 </script>
 </body>
 </html>
+
