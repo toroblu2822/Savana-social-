@@ -68,7 +68,7 @@
         <div class="flex space-x-4 text-sm mt-2 items-center">
           <button @click="toggleLike(post)" :class="userLiked(post) ? 'text-pink-500' : 'text-gray-600'">❤️ Like ({{ post.likes.length }})</button>
           <button @click="post.showComments = !post.showComments" class="text-blue-600">💬 Commenti ({{ post.comments.length }})</button>
-          <button v-if="isModerator" @click="deletePost(post.id)" class="text-red-500 text-xs ml-auto">🗑 Elimina</button>
+         <button v-if="isModerator || post.author === username" @click="deletePost(post.id)" class="text-red-500 text-xs ml-auto">🗑 Elimina</button>
         </div>
         <div v-if="post.showComments" class="space-y-2 mt-2">
           <div v-for="c in post.comments" class="bg-gray-100 p-2 rounded text-sm">
