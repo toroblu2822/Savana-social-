@@ -242,13 +242,15 @@ createApp({
       }, { merge: true });
     },
     viewProfile(p) {
-      this.profileView = p;
-        viewOwnProfile() {
-    const myProfile = this.users.find(u => u.username === this.username);
-    if (myProfile) {
-      this.profileView = myProfile;
-    }
-  },
+  this.profileView = p;
+    viewOwnProfile() {
+      const myProfile = this.users.find(u => u.username === this.username);
+      if (myProfile) {
+        this.profileView = myProfile;
+      }
+    },
+},
+
 
     },
     loadPosts() {
