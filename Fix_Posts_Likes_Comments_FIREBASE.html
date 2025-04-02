@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Fix Firebase Posts</title>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h2>🔧 Correzione in corso dei post su Firebase...</h2>
+  <p id="status">Avvio in corso...</p>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBjhgwUd0P4EV7ZhsqCRHPFJQoASUKvc",
+      authDomain: "savana-social.firebaseapp.com",
+      projectId: "savana-social",
+      storageBucket: "savana-social.firebasestorage.app",
+      messagingSenderId: "1009203185830",
+      appId: "1:1009203185830:web:14ca2c419caab2dfc40c67"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const status = document.getElementById("status");
+    status.innerText = "Caricamento post da correggere...";
+
+    db.collection("posts").get().then(snapshot => {
+      let updated = 0;
+      const total = snapshot.size;
+
+      if (total === 0) {
+        status.innerText = "Nessun post trovato.";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const updateData = {};
+        if (!Array.isArray(data.likes)) updateData.likes = [];
+        if (!Array.isArray(data.comments)) updateData.comments = [];
+
+        if (Object.keys(updateData).length > 0) {
+          db.collection("posts").doc(doc.id).update(updateData)
+            .then(() => {
+              updated++;
+              status.innerText = `✅ Corretto ${updated} di ${total} post...`;
+            })
+            .catch(err => {
+              console.error("Errore aggiornando post:", doc.id, err);
+            });
+        }
+      });
+
+      status.innerText = "✅ Correzione completata.";
+    }).catch(err => {
+      status.innerText = "Errore nel recupero dei post.";
+      console.error(err);
+    });
+  </script>
+</body>
+</html>
