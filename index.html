@@ -199,7 +199,7 @@ createApp({
       this.bio = u.bio;
       this.avatar = u.avatar;
       this.loggedIn = true;
-      this.isModerator = (this.username.toLowerCase() === "admin");
+      this.isModerator = (this.username.toLowerCase() === "juan");
       db.collection("profiles").doc(this.username).set({
         username: this.username, species: this.species, bio: this.bio, avatar: this.avatar
       }, { merge: true });
