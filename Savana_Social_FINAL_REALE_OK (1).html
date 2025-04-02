@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Savana Social - Final</title>
+  <script src="https://unpkg.com/vue@3.4.15/dist/vue.global.prod.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: url('https://images.unsplash.com/photo-1504457046788-2509ec43a81c?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+      background-size: cover;
+    }
+    .backdrop {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+    .rounded-xl {
+      border-radius: 1.5rem;
+    }
+    [v-cloak] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak class="backdrop min-h-screen p-4 max-w-3xl mx-auto space-y-6 rounded-xl shadow-xl text-sm">
+    <div v-if="loading" class="text-center mt-10 text-yellow-600 text-xl font-bold">🦁 Caricamento...</div>
+
+    <div v-else-if="!loggedIn" class="bg-white p-6 rounded-xl space-y-4">
+      <input v-model="username" placeholder="Nome animale" class="w-full p-2 border rounded">
+      <select v-model="species" class="w-full p-2 border rounded">
+        <option disabled value="">Specie</option>
+        <option>Leone</option><option>Giraffa</option><option>Elefante</option>
+        <option>Zebra</option><option>Ghepardo</option><option>Iena</option>
+        <option>Scimmia</option><option>Antilope</option>
+      </select>
+      <textarea v-model="bio" placeholder="Bio..." class="w-full p-2 border rounded"></textarea>
+      <input type="file" @change="handleAvatar" class="w-full p-2 border rounded">
+      <button @click="login" class="w-full bg-yellow-600 text-white p-2 rounded hover:bg-yellow-700">ENTRA</button>
+    </div>
+
+    <div v-else>
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-yellow-700">🌿 Savana Social</h1>
+        <div class="flex space-x-2">
+          <input v-model="searchQuery" @input="resetInactivity" placeholder="🔍 Cerca utenti..." class="px-2 py-1 rounded text-sm text-black">
+          <button @click="toggleOnlinePanel" class="bg-yellow-500 px-2 py-1 rounded text-white text-sm">👥 Online</button>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl mt-4">
+        <div class="flex space-x-3 items-center">
+          <img v-if="avatar" :src="avatar" class="w-12 h-12 rounded-full object-cover" />
+          <div>
+            <h2 class="font-bold">{{ username }} ({{ species }})</h2>
+            <p class="text-xs italic">{{ bio }}</p>
+          </div>
+        </div>
+        <button @click="logout" class="mt-2 text-red-500 text-sm">Esci</button>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl mt-4 space-y-2">
+        <textarea v-model="newPost" @input="resetInactivity" placeholder="Scrivi qualcosa..." class="w-full p-2 border rounded"></textarea>
+        <input type="file" @change="handlePostImage" class="w-full p-2 border rounded">
+        <button @click="submitPost" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Pubblica</button>
+      </div>
+
+      <div v-for="post in posts" :key="post.id" class="bg-white p-4 rounded-xl mt-4 space-y-2">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-2 cursor-pointer" @click="openProfile(post.author)">
+            <img v-if="post.avatar" :src="post.avatar" class="w-10 h-10 rounded-full object-cover">
+            <div><strong>{{ post.author }} ({{ post.species }})</strong><p class="text-xs italic text-gray-500">{{ post.bio }}</p></div>
+          </div>
+          <span class="text-xs text-gray-500">{{ post.timestamp && post.timestamp.toDate ? post.timestamp.toDate().toLocaleString() : '' }}</span>
+        </div>
+        <p>{{ post.content }}</p>
+        <img v-if="post.image" :src="post.image" class="rounded w-full max-h-64 object-contain">
+        <div class="flex space-x-4 text-sm mt-2">
+          <button @click="toggleLike(post)" :class="userLiked(post) ? 'text-pink-500' : 'text-gray-600'">❤️ Like ({{ post.likes.length }})</button>
+          <button @click="post.showComments = !post.showComments" class="text-blue-600">💬 Commenti ({{ post.comments.length }})</button>
+        </div>
+        <div v-if="post.showComments" class="space-y-2 mt-2">
+          <div v-for="c in post.comments" class="bg-gray-100 p-2 rounded text-sm"><strong>{{ c.author }}:</strong> {{ c.text }}</div>
+          <div class="flex space-x-2">
+            <input v-model="post.newComment" @input="resetInactivity" placeholder="Scrivi un commento..." class="flex-1 p-1 text-sm border rounded">
+            <button @click="addComment(post)" class="text-sm bg-blue-500 text-white px-2 rounded">Invia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Qui segue il blocco Vue + Firebase... (salvato nel prossimo step) -->
+</body>
+</html>
