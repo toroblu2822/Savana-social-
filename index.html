@@ -37,6 +37,10 @@
 
   <div v-else>
     <div class="flex justify-between items-center text-white">
+      <div class="text-right">
+  <button @click="viewOwnProfile" class="text-sm text-white underline">👤 Il mio profilo</button>
+</div>
+
       <h1 class="text-xl font-bold">🌿 Savana Social</h1>
       <button @click="logout" class="text-red-300 text-sm">Esci</button>
     </div>
@@ -239,6 +243,13 @@ createApp({
     },
     viewProfile(p) {
       this.profileView = p;
+        viewOwnProfile() {
+    const myProfile = this.users.find(u => u.username === this.username);
+    if (myProfile) {
+      this.profileView = myProfile;
+    }
+  },
+
     },
     loadPosts() {
       db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snapshot => {
