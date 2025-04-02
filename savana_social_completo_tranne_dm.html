@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Savana Social - Tutto Tranne DM</title>
+  <script src="https://unpkg.com/vue@3.4.15/dist/vue.global.prod.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('savana.webp') no-repeat center center fixed;
+      background-size: cover;
+    }
+    [v-cloak] { display: none; }
+  </style>
+</head>
+<body>
+<div id="app" v-cloak class="min-h-screen max-w-3xl mx-auto p-4 space-y-6 text-sm text-gray-800">
+
+  <div v-if="loading" class="text-center mt-20 text-xl text-yellow-500 font-bold">🦁 Caricamento Savana...</div>
+
+  <div v-else-if="!loggedIn" class="bg-white p-6 rounded-xl shadow-xl space-y-4">
+    <input v-model="username" placeholder="Nome animale" class="w-full p-2 border rounded">
+    <select v-model="species" class="w-full p-2 border rounded">
+      <option disabled value="">Specie</option>
+      <option>Leone</option><option>Giraffa</option><option>Elefante</option>
+      <option>Zebra</option><option>Ghepardo</option><option>Iena</option>
+      <option>Scimmia</option><option>Antilope</option>
+    </select>
+    <textarea v-model="bio" placeholder="Bio..." class="w-full p-2 border rounded"></textarea>
+    <input type="file" @change="handleAvatar" class="w-full p-2 border rounded">
+    <button @click="login" class="w-full bg-yellow-600 text-white p-2 rounded hover:bg-yellow-700">ENTRA</button>
+  </div>
+
+  <div v-else>
+    <div class="flex justify-between items-center text-white">
+      <h1 class="text-xl font-bold">🌿 Savana Social</h1>
+      <button @click="logout" class="text-red-300 text-sm">Esci</button>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl flex items-center space-x-4">
+      <img v-if="avatar" :src="avatar" class="w-12 h-12 rounded-full object-cover">
+      <div>
+        <h2 class="font-bold">{{ username }} ({{ species }})</h2>
+        <p class="text-xs italic">{{ bio }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl space-y-2">
+      <textarea v-model="newPost" placeholder="Scrivi qualcosa..." class="w-full p-2 border rounded"></textarea>
+      <input type="file" @change="handlePostImage" class="w-full p-2 border rounded">
+      <button @click="submitPost" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Pubblica</button>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl">
+      <input v-model="searchQuery" placeholder="🔍 Cerca utenti..." class="w-full p-2 border rounded mb-3">
+      <div v-for="p in filteredUsers" :key="p.username" class="flex items-center justify-between border-t pt-2 mt-2">
+        <div class="flex items-center space-x-3 cursor-pointer" @click="viewProfile(p)">
+          <img :src="p.avatar" class="w-8 h-8 rounded-full object-cover">
+          <span class="text-sm font-semibold">{{ p.username }} ({{ p.species }})</span>
+        </div>
+        <button v-if="p.username !== username" @click="toggleFollow(p.username)" class="text-xs text-blue-500 hover:underline">
+          {{ following.includes(p.username) ? 'Smetti di seguire' : 'Segui' }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="profileView" class="bg-white p-4 rounded-xl">
+      <div class="flex justify-between">
+        <h2 class="font-bold text-lg">{{ profileView.username }} ({{ profileView.species }})</h2>
+        <button @click="profileView = null" class="text-red-400 text-sm">Chiudi</button>
+      </div>
+      <img :src="profileView.avatar" class="w-20 h-20 rounded-full object-cover my-2">
+      <p class="italic text-sm">{{ profileView.bio }}</p>
+      <p class="text-xs mt-2">👥 Follower: {{ profileView.followers?.length || 0 }} | Seguiti: {{ profileView.following?.length || 0 }}</p>
+      <ul class="text-xs text-gray-500 mt-1" v-if="profileView.followers && profileView.followers.length">
+        <li v-for="f in profileView.followers">👁 {{ f }}</li>
+      </ul>
+      <hr class="my-2">
+      <div v-for="post in posts.filter(p => p.author === profileView.username)" class="border-t pt-2 mt-2">
+        <p class="text-sm">{{ post.content }}</p>
+        <img v-if="post.image" :src="post.image" class="w-full max-h-48 object-contain rounded mt-2">
+      </div>
+    </div>
+
+    <div v-for="post in posts" :key="post.id" class="bg-white p-4 rounded-xl shadow mt-4 space-y-2">
+      <div class="flex space-x-2 items-center">
+        <img v-if="post.avatar" :src="post.avatar" class="w-10 h-10 rounded-full object-cover">
+        <div>
+          <strong>{{ post.author }} ({{ post.species }})</strong>
+          <p class="text-xs italic text-gray-500">{{ post.bio }}</p>
+        </div>
+      </div>
+      <p>{{ post.content }}</p>
+      <img v-if="post.image" :src="post.image" class="w-full max-h-64 object-contain rounded">
+      <div class="flex space-x-4 text-sm mt-2 items-center">
+        <button @click="toggleLike(post)" :class="userLiked(post) ? 'text-pink-500' : 'text-gray-600'">❤️ Like ({{ post.likes.length }})</button>
+        <button @click="post.showComments = !post.showComments" class="text-blue-600">💬 Commenti ({{ post.comments.length }})</button>
+        <button v-if="isModerator || post.author === username" @click="deletePost(post.id)" class="text-red-500 text-xs ml-auto">🗑 Elimina</button>
+      </div>
+      <div v-if="post.showComments" class="space-y-2 mt-2">
+        <div v-for="c in post.comments" class="bg-gray-100 p-2 rounded text-sm">
+          <strong>{{ c.author }}:</strong> {{ c.text }}
+        </div>
+        <div class="flex space-x-2">
+          <input v-model="post.newComment" placeholder="Scrivi un commento..." class="flex-1 p-1 text-sm border rounded">
+          <button @click="addComment(post)" class="bg-blue-500 text-white text-sm px-2 rounded">Invia</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
