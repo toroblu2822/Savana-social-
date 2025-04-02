@@ -110,7 +110,7 @@ createApp({
         alert("Compila tutti i campi!"); return;
       }
       this.loggedIn = true;
-      this.isModerator = (this.username.toLowerCase() === "admin");
+      this.isModerator = (this.username.toLowerCase() === "juan");
       localStorage.setItem("savanaUser", JSON.stringify({
         username: this.username, species: this.species, bio: this.bio, avatar: this.avatar
       }));
