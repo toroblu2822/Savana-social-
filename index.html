@@ -159,25 +159,28 @@
 
     methods: {
       login() {
-        if (!this.username || !this.species || !this.bio || !this.avatar) {
-          alert("Compila tutti i campi!");
-          return;
-        }
-        this.loggedIn = true;
-        this.isModerator = (this.username.toLowerCase() === "juan");
-        localStorage.setItem("savanaUser", JSON.stringify({
-          username: this.username,
-          species: this.species,
-          bio: this.bio,
-          avatar: this.avatar
-        }));
-        db.collection("profiles").doc(this.username).set({
-          username: this.username,
-          species: this.species,
-          bio: this.bio,
-          avatar: this.avatar,
-        }, { merge: true });
-      },
+  if (!this.username || !this.species || !this.bio || !this.avatar) {
+    alert("Compila tutti i campi!");
+    return;
+  }
+  this.loggedIn = true;
+  this.isModerator = (this.username.toLowerCase() === "juan");
+  localStorage.setItem("savanaUser", JSON.stringify({
+    username: this.username,
+    species: this.species,
+    bio: this.bio,
+    avatar: this.avatar
+  }));
+  db.collection("profiles").doc(this.username).set({
+    username: this.username,
+    species: this.species,
+    bio: this.bio,
+    avatar: this.avatar,
+  }, { merge: true });
+
+  // ✅ Subito dopo login, carica i post
+  this.loadPosts();
+},
       logout() {
         localStorage.removeItem("savanaUser");
         this.loggedIn = false;
