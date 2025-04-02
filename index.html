@@ -49,23 +49,28 @@
       </div>
     </div>
 
-    <div class="bg-white p-4 rounded-xl">
-      <button @click="showUserSearch = !showUserSearch" class="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">
-        🔍 Cerca utenti
-      </button>
-      <div v-if="showUserSearch" class="mt-4 space-y-2">
-        <input v-model="searchQuery" placeholder="🔎 Nome..." class="w-full p-2 border rounded">
-        <div v-for="p in filteredUsers" :key="p.username" class="flex items-center justify-between border-t pt-2 mt-2">
-          <div class="flex items-center space-x-3 cursor-pointer" @click="viewProfile(p)">
-            <img :src="p.avatar" class="w-8 h-8 rounded-full object-cover">
-            <span class="text-sm font-semibold">{{ p.username }} ({{ p.species }})</span>
-          </div>
-          <button v-if="p.username !== username" @click="toggleFollow(p.username)" class="text-xs text-blue-500 hover:underline">
-            {{ following.includes(p.username) ? 'Smetti di seguire' : 'Segui' }}
-          </button>
-        </div>
+    <!-- 🔽 TENDINA CERCA UTENTI FIX -->
+<div class="bg-white p-4 rounded-xl">
+  <button @click="showUserSearch = !showUserSearch" class="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">
+    🔍 Cerca utenti
+  </button>
+  <div v-if="showUserSearch" class="mt-4 space-y-2">
+    <input v-model="searchQuery" placeholder="🔎 Nome..." class="w-full p-2 border rounded">
+    
+    <div v-if="filteredUsers.length === 0" class="text-sm text-gray-500 text-center mt-2">Nessun utente trovato</div>
+    
+    <div v-for="p in filteredUsers" :key="p.username" class="flex items-center justify-between border-t pt-2 mt-2">
+      <div class="flex items-center space-x-3 cursor-pointer" @click="viewProfile(p)">
+        <img :src="p.avatar" class="w-8 h-8 rounded-full object-cover">
+        <span class="text-sm font-semibold">{{ p.username }} ({{ p.species }})</span>
       </div>
+      <button v-if="p.username !== username" @click="toggleFollow(p.username)" class="text-xs text-blue-500 hover:underline">
+        {{ following.includes(p.username) ? 'Smetti di seguire' : 'Segui' }}
+      </button>
     </div>
+  </div>
+</div>
+
 
     <div v-if="profileView" class="bg-white p-4 rounded-xl">
       <div class="flex justify-between">
