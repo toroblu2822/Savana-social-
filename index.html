@@ -153,101 +153,113 @@ createApp({
       );
     }
   },
-  methods: {
-    login() {
-      if (!this.username || !this.species || !this.bio || !this.avatar) {
-        alert("Compila tutti i campi!");
-        return;
-      }
-      this.loggedIn = true;
-      this.isModerator = (this.username.toLowerCase() === "juan");
-      localStorage.setItem("savanaUser", JSON.stringify({
-        username: this.username,
-        species: this.species,
-        bio: this.bio,
-        avatar: this.avatar
-      }));
-      db.collection("profiles").doc(this.username).set({
-        username: this.username,
-        species: this.species,
-        bio: this.bio,
-        avatar: this.avatar
-      }, { merge: true });
-    },
-    logout() {
-      localStorage.removeItem("savanaUser");
-      this.loggedIn = false;
-      this.username = ''; this.species = ''; this.bio = ''; this.avatar = '';
-      this.posts = [];
-    },
-    handleAvatar(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => this.avatar = e.target.result;
-        reader.readAsDataURL(file);
-      }
-    },
-    handlePostImage(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => this.postImage = e.target.result;
-        reader.readAsDataURL(file);
-      }
-    },
-    submitPost() {
-      if (!this.newPost && !this.postImage) return;
-      const post = {
-        author: this.username,
-        species: this.species,
-        bio: this.bio,
-        avatar: this.avatar,
-        content: this.newPost,
-        image: this.postImage || '',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        likes: [],
-        comments: []
-      };
-      db.collection("posts").add(post);
-      this.newPost = '';
-      this.postImage = '';
-    },
-    toggleLike(post) {
-      const index = post.likes.indexOf(this.username);
-      if (index === -1) post.likes.push(this.username);
-      else post.likes.splice(index, 1);
-      db.collection("posts").doc(post.id).update({ likes: post.likes });
-    },
-    userLiked(post) {
-      return post.likes.includes(this.username);
-    },
-    addComment(post) {
-      if (!post.newComment || !post.newComment.trim()) return;
-      post.comments.push({ author: this.username, text: post.newComment });
-      db.collection("posts").doc(post.id).update({ comments: post.comments });
-      post.newComment = '';
-    },
-    deletePost(postId) {
-      if (confirm("Eliminare questo post?")) {
-        db.collection("posts").doc(postId).delete();
-      }
-    },
-    toggleFollow(target) {
-      const index = this.following.indexOf(target);
-      if (index === -1) this.following.push(target);
-      else this.following.splice(index, 1);
-      db.collection("profiles").doc(this.username).set({
-        following: this.following
-      }, { merge: true });
-    },
-    viewProfile(p) {
-  this.profileView = p;
-},
-viewOwnProfile() {
-  const myProfile = this.users.find(u => u.username === this.username);
-  if (myProfile) {
-    this.profileView = myProfile;
+ methods: {
+  login() {
+    if (!this.username || !this.species || !this.bio || !this.avatar) {
+      alert("Compila tutti i campi!");
+      return;
+    }
+    this.loggedIn = true;
+    this.isModerator = (this.username.toLowerCase() === "juan");
+    localStorage.setItem("savanaUser", JSON.stringify({
+      username: this.username,
+      species: this.species,
+      bio: this.bio,
+      avatar: this.avatar
+    }));
+    db.collection("profiles").doc(this.username).set({
+      username: this.username,
+      species: this.species,
+      bio: this.bio,
+      avatar: this.avatar
+    }, { merge: true });
+  },
+
+  logout() {
+    localStorage.removeItem("savanaUser");
+    this.loggedIn = false;
+    this.username = ''; this.species = ''; this.bio = ''; this.avatar = '';
+    this.posts = [];
+  },
+
+  handleAvatar(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => this.avatar = e.target.result;
+      reader.readAsDataURL(file);
+    }
+  },
+
+  handlePostImage(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => this.postImage = e.target.result;
+      reader.readAsDataURL(file);
+    }
+  },
+
+  submitPost() {
+    if (!this.newPost && !this.postImage) return;
+    const post = {
+      author: this.username,
+      species: this.species,
+      bio: this.bio,
+      avatar: this.avatar,
+      content: this.newPost,
+      image: this.postImage || '',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      likes: [],
+      comments: []
+    };
+    db.collection("posts").add(post);
+    this.newPost = '';
+    this.postImage = '';
+  },
+
+  toggleLike(post) {
+    const index = post.likes.indexOf(this.username);
+    if (index === -1) post.likes.push(this.username);
+    else post.likes.splice(index, 1);
+    db.collection("posts").doc(post.id).update({ likes: post.likes });
+  },
+
+  userLiked(post) {
+    return post.likes.includes(this.username);
+  },
+
+  addComment(post) {
+    if (!post.newComment || !post.newComment.trim()) return;
+    post.comments.push({ author: this.username, text: post.newComment });
+    db.collection("posts").doc(post.id).update({ comments: post.comments });
+    post.newComment = '';
+  },
+
+  deletePost(postId) {
+    if (confirm("Eliminare questo post?")) {
+      db.collection("posts").doc(postId).delete();
+    }
+  },
+
+  toggleFollow(target) {
+    const index = this.following.indexOf(target);
+    if (index === -1) this.following.push(target);
+    else this.following.splice(index, 1);
+    db.collection("profiles").doc(this.username).set({
+      following: this.following
+    }, { merge: true });
+  },
+
+  viewProfile(p) {
+    this.profileView = p;
+  },
+
+  viewOwnProfile() {
+    const myProfile = this.users.find(u => u.username === this.username);
+    if (myProfile) {
+      this.profileView = myProfile;
+    }
   }
 },
 
